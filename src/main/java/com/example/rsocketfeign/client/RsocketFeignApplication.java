@@ -33,6 +33,7 @@ public class RsocketFeignApplication {
 	ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
 		return are -> {
 			Mono <GreetingResponse> greet = greetingClient.greet();
+			greet.subscribe(System.out::println );
 		};
 	}
 

@@ -16,6 +16,7 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
@@ -153,21 +154,32 @@ class RSocketClientBuilder {
 		pfb.setTargetClass(clazz);
 		pfb.setAutodetectInterfaces(true);
 		pfb.addAdvice((MethodInterceptor) methodInvocation -> {
-			String name = methodInvocation.getMethod().getName();
+			String methodName = methodInvocation.getMethod().getName();
 			// ok, so somebody has invoked a method on our interface. now we need to figure out what the signature on the method implies
 			// we also need to inspect it for @MessageMapping annotations
 			// and we need to then u
 			Class<?> returnType = methodInvocation.getMethod().getReturnType();
 			Object[] arguments = methodInvocation.getArguments();
 			Parameter[] parameters = methodInvocation.getMethod().getParameters();
+			log.info("invoking method " + methodName + '.');
 			log.info("return class: " + returnType.getName());
-			log.info("return Mono?: " + Mono.class.isAssignableFrom(returnType));
+			log.info("return Mono: " + Mono.class.isAssignableFrom(returnType));
 			log.info("return Flux: " + Flux.class.isAssignableFrom(returnType));
 
 			MessageMapping annotation = methodInvocation.getMethod().getAnnotation(MessageMapping.class);
 			String route = annotation.value()[0];
 			log.info("route: " + route);
-			
+
+			ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
+			Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass(); // this is T for Mono<T> or Flux<T>
+
+			if (Mono.class.isAssignableFrom(returnType)) {
+				return rSocketRequester
+						.route(route)
+						.data(Mono.empty())
+						.retrieveMono(rawClassForReturnType);
+			}
+
 
 			return Mono.empty();
 		});
