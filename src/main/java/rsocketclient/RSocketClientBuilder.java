@@ -43,11 +43,19 @@ class RSocketClientBuilder {
 			if (Mono.class.isAssignableFrom(returnType)) {
 				return rSocketRequester
 						.route(route)
-						.data(Mono.empty())
+						.data(methodInvocation.getArguments()[0])
 						.retrieveMono(rawClassForReturnType);
 			}
 
+			if (Flux.class.isAssignableFrom(returnType)) {
+				return rSocketRequester
+						.route(route)
+						.data(methodInvocation.getArguments()[0])
+						.retrieveFlux(rawClassForReturnType);
+			}
 
+
+			// if the return type is void ...
 			return Mono.empty();
 		});
 		pfb.addInterface(clazz);
