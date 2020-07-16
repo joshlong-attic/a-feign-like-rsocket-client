@@ -9,9 +9,15 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rsocketclient.RSocketClient;
+
+@RSocketClient
+interface GreetingClient {
+
+	@MessageMapping("greetings")
+	Mono<GreetingResponse> greet();
+}
 
 @SpringBootApplication
 public class RsocketFeignApplication {
@@ -32,17 +38,10 @@ public class RsocketFeignApplication {
 	@Bean
 	ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
 		return are -> {
-			Mono <GreetingResponse> greet = greetingClient.greet();
-			greet.subscribe(System.out::println );
+			Mono<GreetingResponse> greet = greetingClient.greet();
+			greet.subscribe(System.out::println);
 		};
 	}
 
-}
-
-@RSocketClient
-interface GreetingClient {
-
-	@MessageMapping("greetings")
-	Mono<GreetingResponse> greet();
 }
 
