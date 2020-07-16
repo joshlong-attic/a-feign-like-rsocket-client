@@ -40,17 +40,20 @@ class RSocketClientBuilder {
 			ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
 			Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass(); // this is T for Mono<T> or Flux<T>
 
+			Object argument =
+					methodInvocation.getArguments().length == 0 ? Mono.empty() : methodInvocation.getArguments()[0];
+
 			if (Mono.class.isAssignableFrom(returnType)) {
 				return rSocketRequester
 						.route(route)
-						.data(methodInvocation.getArguments()[0])
+						.data(argument)
 						.retrieveMono(rawClassForReturnType);
 			}
 
 			if (Flux.class.isAssignableFrom(returnType)) {
 				return rSocketRequester
 						.route(route)
-						.data(methodInvocation.getArguments()[0])
+						.data(argument)
 						.retrieveFlux(rawClassForReturnType);
 			}
 
