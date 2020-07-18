@@ -16,53 +16,60 @@ import rsocketclient.RSocketClient;
 @RSocketClient
 interface GreetingClient {
 
-	@MessageMapping("greetings-with-channel")
-	Flux<GreetingResponse> greetParams(Flux<String> names);
+    @MessageMapping("greetings-with-channel")
+    Flux<GreetingResponse> greetParams(Flux<String> names);
 
-	@MessageMapping("greetings-stream")
-	Flux<GreetingResponse> greetStream(Mono<String> name);
+    @MessageMapping("greetings-stream")
+    Flux<GreetingResponse> greetStream(Mono<String> name);
 
-	@MessageMapping("greetings")
-	Mono<GreetingResponse> greet();
+    @MessageMapping("greetings")
+    Mono<GreetingResponse> greet();
 
-	@MessageMapping("greetings-with-name")
-	Mono<GreetingResponse> greet(Mono<String> name);
+    @MessageMapping("greetings-with-name")
+    Mono<GreetingResponse> greet(Mono<String> name);
+
+    @MessageMapping("fire-and-forget")
+    Mono<Void> greetFireAndForget(Mono<String> name);
 }
 
 @SpringBootApplication
 public class RsocketFeignApplication {
 
-	@SneakyThrows
-	public static void main(String[] args) {
-		SpringApplication.run(RsocketFeignApplication.class, args);
-		System.in.read();
-	}
+    @SneakyThrows
+    public static void main(String[] args) {
+        SpringApplication.run(RsocketFeignApplication.class, args);
+        System.in.read();
+    }
 
-	@Bean
-	RSocketRequester rSocketRequester(RSocketRequester.Builder builder) {
-		return builder
-				.connectTcp("localhost", 8888)
-				.block();
-	}
+    @Bean
+    RSocketRequester rSocketRequester(RSocketRequester.Builder builder) {
+        return builder
+                .connectTcp("localhost", 8888)
+                .block();
+    }
 
-	@Bean
-	ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
-		return are -> {
+    @Bean
+    ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
+        return are -> {
 
-			greetingClient
-					.greetParams(Flux.just("one", "two"))
-					.subscribe(System.out::println);
+            greetingClient
+                    .greetFireAndForget(Mono.just("Spring Fans"))
+                    .subscribe();
 
-			greetingClient.greet().subscribe(System.out::println);
+            greetingClient
+                    .greetParams(Flux.just("one", "two"))
+                    .subscribe(System.out::println);
 
-			greetingClient.greet(Mono.just("Spring Fans")).subscribe(System.out::println);
+            greetingClient.greet().subscribe(System.out::println);
 
-			greetingClient
-					.greetStream(Mono.just("Spring fans over and over"))
-					.take(5)
-					.subscribe(System.out::println);
-		};
-	}
+            greetingClient.greet(Mono.just("Spring Fans")).subscribe(System.out::println);
+
+            greetingClient
+                    .greetStream(Mono.just("Spring fans over and over"))
+                    .take(5)
+                    .subscribe(System.out::println);
+        };
+    }
 
 }
 

@@ -21,8 +21,8 @@ class RSocketClientFactoryBean implements ApplicationContextAware, FactoryBean<O
 
 	@Override
 	public Object getObject() throws Exception {
-		// todo make this more dynamic so that we can associate a particular bean to a paritcular interface.
-		// right now we assume there's only per context
+		// todo make this more dynamic so that we can associate a particular bean to a particular interface.
+		// todo right now we assume there's only per context
 		RSocketRequester rSocketRequester = this.context.getBean(RSocketRequester.class);
 		return RSocketClientBuilder.buildClientFor(this.type, rSocketRequester);
 	}
