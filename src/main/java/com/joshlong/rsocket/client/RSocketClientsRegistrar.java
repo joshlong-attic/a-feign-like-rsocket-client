@@ -13,14 +13,15 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.Assert;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
@@ -38,7 +39,12 @@ class RSocketClientsRegistrar
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
-		Collection<String> basePackages = AutoConfigurationPackages.get(this.beanFactory);
+		Assert.isTrue(importingClassMetadata instanceof StandardAnnotationMetadata,
+				"we need a valid reference to " + StandardAnnotationMetadata.class.getName());
+		StandardAnnotationMetadata standardAnnotationMetadata = (StandardAnnotationMetadata) importingClassMetadata;
+		Collection<String> basePackages = AutoConfigurationPackages.has(this.beanFactory)
+				? AutoConfigurationPackages.get(this.beanFactory)
+				: Arrays.asList(standardAnnotationMetadata.getIntrospectedClass().getPackage().getName());
 		ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
 		basePackages.forEach(basePackage -> scanner.findCandidateComponents(basePackage).stream()
 				.filter(cc -> cc instanceof AnnotatedBeanDefinition).map(abd -> (AnnotatedBeanDefinition) abd)
