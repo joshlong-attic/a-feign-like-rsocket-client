@@ -27,85 +27,81 @@ import java.util.Map;
  */
 @Log4j2
 class RSocketClientsRegistrar
-        implements ImportBeanDefinitionRegistrar, BeanFactoryAware, EnvironmentAware, ResourceLoaderAware {
+		implements ImportBeanDefinitionRegistrar, BeanFactoryAware, EnvironmentAware, ResourceLoaderAware {
 
-    private BeanFactory beanFactory;
-    private Environment environment;
-    private ResourceLoader resourceLoader;
+	private BeanFactory beanFactory;
 
-    @Override
-    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
-                                        BeanDefinitionRegistry registry,
-                                        BeanNameGenerator importBeanNameGenerator) {
-        Collection<String> basePackages = AutoConfigurationPackages.get(this.beanFactory);
-        ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
-        basePackages
-                .forEach(basePackage -> scanner
-                        .findCandidateComponents(basePackage)
-                        .stream()
-                        .filter(cc -> cc instanceof AnnotatedBeanDefinition)
-                        .map(abd -> (AnnotatedBeanDefinition) abd)
-                        .forEach(beanDefinition -> {
-                            AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
-                            Assert.isTrue(annotationMetadata.isInterface(), "the @" + RSocketClient.class.getName() +
-                                    " annotation must be used only on an interface");
-                            Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(RSocketClient.class.getCanonicalName());
-                            this.registerRSocketClient(registry, beanDefinition, annotationMetadata, attributes);
-                        }));
-    }
+	private Environment environment;
 
-    private ClassPathScanningCandidateComponentProvider buildScanner() {
-        ClassPathScanningCandidateComponentProvider scanner =
-                new ClassPathScanningCandidateComponentProvider(false, this.environment) {
-                    @Override
-                    protected boolean isCandidateComponent(AnnotatedBeanDefinition metadata) {
-                        return metadata.getMetadata().isIndependent() && !metadata.getMetadata().isAnnotation();
-                    }
-                };
-        scanner.addIncludeFilter(new AnnotationTypeFilter(RSocketClient.class));
-        scanner.setResourceLoader(this.resourceLoader);
-        return scanner;
-    }
+	private ResourceLoader resourceLoader;
 
-    @Override
-    public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-    }
+	@Override
+	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
+			BeanNameGenerator importBeanNameGenerator) {
+		Collection<String> basePackages = AutoConfigurationPackages.get(this.beanFactory);
+		ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
+		basePackages.forEach(basePackage -> scanner.findCandidateComponents(basePackage).stream()
+				.filter(cc -> cc instanceof AnnotatedBeanDefinition).map(abd -> (AnnotatedBeanDefinition) abd)
+				.forEach(beanDefinition -> {
+					AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
+					Assert.isTrue(annotationMetadata.isInterface(),
+							"the @" + RSocketClient.class.getName() + " annotation must be used only on an interface");
+					Map<String, Object> attributes = annotationMetadata
+							.getAnnotationAttributes(RSocketClient.class.getCanonicalName());
+					this.registerRSocketClient(registry, beanDefinition, annotationMetadata, attributes);
+				}));
+	}
 
-    private void registerRSocketClient(BeanDefinitionRegistry registry,
-                                       AnnotatedBeanDefinition abstractBeanDefinition,
-                                       AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+	private ClassPathScanningCandidateComponentProvider buildScanner() {
+		ClassPathScanningCandidateComponentProvider scanner = new ClassPathScanningCandidateComponentProvider(false,
+				this.environment) {
+			@Override
+			protected boolean isCandidateComponent(AnnotatedBeanDefinition metadata) {
+				return metadata.getMetadata().isIndependent() && !metadata.getMetadata().isAnnotation();
+			}
+		};
+		scanner.addIncludeFilter(new AnnotationTypeFilter(RSocketClient.class));
+		scanner.setResourceLoader(this.resourceLoader);
+		return scanner;
+	}
 
-        String className = annotationMetadata.getClassName();
-        if (log.isDebugEnabled()) {
-            log.debug("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
-        }
+	@Override
+	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	}
 
-        BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(RSocketClientFactoryBean.class);
-        definition.addPropertyValue("type", className);
-        definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+	private void registerRSocketClient(BeanDefinitionRegistry registry, AnnotatedBeanDefinition abstractBeanDefinition,
+			AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
 
-        AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
-        beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
-        beanDefinition.setPrimary(true);
+		String className = annotationMetadata.getClassName();
+		if (log.isDebugEnabled()) {
+			log.debug("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
+		}
 
-        BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[0]);
-        BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
-    }
+		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(RSocketClientFactoryBean.class);
+		definition.addPropertyValue("type", className);
+		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 
-    @Override
-    public void setResourceLoader(ResourceLoader resourceLoader) {
-        this.resourceLoader = resourceLoader;
-    }
+		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
+		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
+		beanDefinition.setPrimary(true);
 
-    @Override
-    public void setEnvironment(Environment environment) {
-        this.environment = environment;
-    }
+		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[0]);
+		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
+	}
 
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        this.beanFactory = beanFactory;
-    }
+	@Override
+	public void setResourceLoader(ResourceLoader resourceLoader) {
+		this.resourceLoader = resourceLoader;
+	}
+
+	@Override
+	public void setEnvironment(Environment environment) {
+		this.environment = environment;
+	}
+
+	@Override
+	public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
+		this.beanFactory = beanFactory;
+	}
+
 }
-
-

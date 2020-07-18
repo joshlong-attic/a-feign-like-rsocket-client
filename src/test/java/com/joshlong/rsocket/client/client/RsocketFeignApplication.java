@@ -13,44 +13,28 @@ import reactor.core.publisher.Mono;
 @SpringBootApplication
 public class RsocketFeignApplication {
 
-    @SneakyThrows
-    public static void main(String[] args) {
-        SpringApplication.run(RsocketFeignApplication.class, args);
-        System.in.read();
-    }
+	@SneakyThrows
+	public static void main(String[] args) {
+		SpringApplication.run(RsocketFeignApplication.class, args);
+		System.in.read();
+	}
 
-    @Bean
-    RSocketRequester rSocketRequester(RSocketRequester.Builder builder) {
-        return builder
-                .connectTcp("localhost", 8888)
-                .block();
-    }
+	@Bean
+	RSocketRequester rSocketRequester(RSocketRequester.Builder builder) {
+		return builder.connectTcp("localhost", 8888).block();
+	}
 
-    @Bean
-    ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
-        return are -> {
-            greetingClient
-                    .greetFireAndForget(Mono.just("Spring Fans"))
-                    .subscribe();
-
-            greetingClient
-                    .greetParams(Flux.just("one", "two"))
-                    .subscribe(System.out::println);
-
-            greetingClient.greet().subscribe(System.out::println);
-
-            greetingClient.greet(Mono.just("Spring Fans")).subscribe(System.out::println);
-
-            greetingClient
-                    .greetStream(Mono.just("Spring fans over and over"))
-                    .subscribe(System.out::println);
-
-            greetingClient
-                    .greetMonoNameDestinationVariable("jlong", 36, Mono.just("Josh"))
-                    .subscribe(System.out::println);
-        };
-    }
-
+	@Bean
+	ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
+		return are -> {
+			greetingClient.greetFireAndForget(Mono.just("Spring Fans")).subscribe();
+			greetingClient.greetParams(Flux.just("one", "two")).subscribe(System.out::println);
+			greetingClient.greet().subscribe(System.out::println);
+			greetingClient.greet(Mono.just("Spring Fans")).subscribe(System.out::println);
+			greetingClient.greetStream(Mono.just("Spring fans over and over")).subscribe(System.out::println);
+			greetingClient.greetMonoNameDestinationVariable("jlong", 36, Mono.just("Josh"))
+					.subscribe(System.out::println);
+		};
+	}
 
 }
-

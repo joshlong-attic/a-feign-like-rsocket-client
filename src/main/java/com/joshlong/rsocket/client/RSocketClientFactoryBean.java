@@ -13,27 +13,29 @@ import org.springframework.context.ApplicationContextAware;
 @Log4j2
 class RSocketClientFactoryBean implements ApplicationContextAware, FactoryBean<Object> {
 
-    private Class<?> type;
-    private ApplicationContext context;
+	private Class<?> type;
 
-    @SneakyThrows
-    public void setType(String type) {
-        this.type = Class.forName(type);
-    }
+	private ApplicationContext context;
 
-    @Override
-    public Object getObject() throws Exception {
-        RSocketClientBuilder clientBuilder = this.context.getBean(RSocketClientBuilder.class);
-        return clientBuilder.buildClientFor(this.type);
-    }
+	@SneakyThrows
+	public void setType(String type) {
+		this.type = Class.forName(type);
+	}
 
-    @Override
-    public Class<?> getObjectType() {
-        return this.type;
-    }
+	@Override
+	public Object getObject() throws Exception {
+		RSocketClientBuilder clientBuilder = this.context.getBean(RSocketClientBuilder.class);
+		return clientBuilder.buildClientFor(this.type);
+	}
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.context = applicationContext;
-    }
+	@Override
+	public Class<?> getObjectType() {
+		return this.type;
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+		this.context = applicationContext;
+	}
+
 }

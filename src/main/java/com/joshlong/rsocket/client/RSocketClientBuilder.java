@@ -18,7 +18,6 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
  */
@@ -26,96 +25,95 @@ import java.util.List;
 @RequiredArgsConstructor
 class RSocketClientBuilder {
 
-    private final RSocketRequester rSocketRequester;
+	private final RSocketRequester rSocketRequester;
 
-    public  <T> T buildClientFor(Class<T> clazz) {
-        ProxyFactoryBean pfb = new ProxyFactoryBean();
-        pfb.setTargetClass(clazz);
-        pfb.addInterface(clazz);
-        pfb.setAutodetectInterfaces(true);
-        pfb.addAdvice((MethodInterceptor) methodInvocation -> {
-            String methodName = methodInvocation.getMethod().getName();
-            Class<?> returnType = methodInvocation.getMethod().getReturnType();
-            Object[] arguments = methodInvocation.getArguments();
-            Parameter[] parameters = methodInvocation.getMethod().getParameters();
-            MessageMapping annotation = methodInvocation.getMethod().getAnnotation(MessageMapping.class);
-            String route = annotation.value()[0];
-            ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
-            Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass(); // this is T for Mono<T> or Flux<T>
-            Object[] routeArguments = findDestinationVariables(arguments, parameters);
-            Object payloadArgument = findPayloadArgument(arguments, parameters);
-            if (log.isDebugEnabled()) {
-                log.debug("invoking " + methodName + " accepting " + arguments.length + " argument(s) for route " + route +
-                        " with destination variables (" + StringUtils.arrayToDelimitedString(routeArguments, ", ") + ")" +
-                        '.' + " The payload is " + payloadArgument);
-            }
-            if (Mono.class.isAssignableFrom(returnType)) {
-                // special case for fire-and-forget
-                if (Void.class.isAssignableFrom(rawClassForReturnType)) {
-                    if (log.isDebugEnabled()) {
-                        log.debug("fire-and-forget");
-                    }
-                    return rSocketRequester
-                            .route(route, routeArguments)
-                            .data(payloadArgument)
-                            .send();
-                } else {
-                    if (log.isDebugEnabled()) {
-                        log.debug("request-response");
-                    }
-                    return rSocketRequester
-                            .route(route, routeArguments)
-                            .data(payloadArgument)
-                            .retrieveMono(rawClassForReturnType);
-                }
-            }
+	private static Object[] findDestinationVariables(Object[] arguments, Parameter[] parameters) {
+		List<Object> destinationVariableValues = new ArrayList<>();
+		for (int i = 0; i < arguments.length; i++) {
+			Parameter parameter = parameters[i];
+			Object arg = arguments[i];
+			if (parameter.getAnnotationsByType(DestinationVariable.class).length > 0) {
+				destinationVariableValues.add(arg);
+			}
+		}
+		return destinationVariableValues.toArray(new Object[0]);
+	}
 
-            if (Flux.class.isAssignableFrom(returnType)) {
-                if (log.isDebugEnabled()) {
-                    log.debug("request-stream or channel");
-                }
-                return rSocketRequester
-                        .route(route, routeArguments)
-                        .data(payloadArgument)
-                        .retrieveFlux(rawClassForReturnType);
-            }
-            // is there something more sensible to return?
-            return Mono.empty();
-        });
+	private static Object findPayloadArgument(Object[] arguments, Parameter[] parameters) {
+		Object payloadArgument = null;
+		if (arguments.length == 0) {
+			payloadArgument = Mono.empty();
+		}
+		else if (arguments.length == 1) {
+			payloadArgument = arguments[0];
+		}
+		else {
+			Assert.isTrue(parameters.length == arguments.length,
+					"there should be " + "an equal number of " + Parameter.class.getName() + " and objects");
+			for (int i = 0; i < parameters.length; i++) {
+				Parameter annotations = parameters[i];
+				Object argument = arguments[i];
+				if (annotations.getAnnotationsByType(Payload.class).length > 0) {
+					payloadArgument = argument;
+				}
+			}
+		}
+		Assert.notNull(payloadArgument,
+				"you must specify a @" + Payload.class.getName() + " parameter OR just one parameter");
+		return payloadArgument;
+	}
 
-        return (T) pfb.getObject();
-    }
+	public <T> T buildClientFor(Class<T> clazz) {
+		ProxyFactoryBean pfb = new ProxyFactoryBean();
+		pfb.setTargetClass(clazz);
+		pfb.addInterface(clazz);
+		pfb.setAutodetectInterfaces(true);
+		pfb.addAdvice((MethodInterceptor) methodInvocation -> {
+			String methodName = methodInvocation.getMethod().getName();
+			Class<?> returnType = methodInvocation.getMethod().getReturnType();
+			Object[] arguments = methodInvocation.getArguments();
+			Parameter[] parameters = methodInvocation.getMethod().getParameters();
+			MessageMapping annotation = methodInvocation.getMethod().getAnnotation(MessageMapping.class);
+			String route = annotation.value()[0];
+			ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
+			Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass();
+			Object[] routeArguments = findDestinationVariables(arguments, parameters);
+			Object payloadArgument = findPayloadArgument(arguments, parameters);
+			if (log.isDebugEnabled()) {
+				log.debug("invoking " + methodName + " accepting " + arguments.length + " argument(s) for route "
+						+ route + " with destination variables ("
+						+ StringUtils.arrayToDelimitedString(routeArguments, ", ") + ")" + '.' + " The payload is "
+						+ payloadArgument);
+			}
+			if (Mono.class.isAssignableFrom(returnType)) {
+				// special case for fire-and-forget
+				if (Void.class.isAssignableFrom(rawClassForReturnType)) {
+					if (log.isDebugEnabled()) {
+						log.debug("fire-and-forget");
+					}
+					return rSocketRequester.route(route, routeArguments).data(payloadArgument).send();
+				}
+				else {
+					if (log.isDebugEnabled()) {
+						log.debug("request-response");
+					}
+					return rSocketRequester.route(route, routeArguments).data(payloadArgument)
+							.retrieveMono(rawClassForReturnType);
+				}
+			}
 
-    private static Object[] findDestinationVariables(Object[] arguments, Parameter[] parameters) {
-        List<Object> destinationVariableValues = new ArrayList<>();
-        for (int i = 0; i < arguments.length; i++) {
-            Parameter parameter = parameters[i];
-            Object arg = arguments[i];
-            if (parameter.getAnnotationsByType(DestinationVariable.class).length > 0) {
-                destinationVariableValues.add(arg);
-            }
-        }
-        return destinationVariableValues.toArray(new Object[0]);
-    }
+			if (Flux.class.isAssignableFrom(returnType)) {
+				if (log.isDebugEnabled()) {
+					log.debug("request-stream or channel");
+				}
+				return rSocketRequester.route(route, routeArguments).data(payloadArgument)
+						.retrieveFlux(rawClassForReturnType);
+			}
+			// is there something more sensible to return?
+			return Mono.empty();
+		});
 
-    private static Object findPayloadArgument(Object[] arguments, Parameter[] parameters) {
-        Object payloadArgument = null;
-        if (arguments.length == 0) {
-            payloadArgument = Mono.empty();
-        } else if (arguments.length == 1) {
-            payloadArgument = arguments[0];
-        } else {
-            Assert.isTrue(parameters.length == arguments.length, "there should be " +
-                    "an equal number of " + Parameter.class.getName() + " and objects");
-            for (int i = 0; i < parameters.length; i++) {
-                Parameter annotations = parameters[i];
-                Object argument = arguments[i];
-                if (annotations.getAnnotationsByType(Payload.class).length > 0) {
-                    payloadArgument = argument;
-                }
-            }
-        }
-        Assert.notNull(payloadArgument, "you must specify a @" + Payload.class.getName() + " parameter OR just one parameter");
-        return payloadArgument;
-    }
+		return (T) pfb.getObject();
+	}
+
 }

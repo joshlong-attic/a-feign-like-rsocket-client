@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
-
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
  */
@@ -16,9 +15,10 @@ import org.springframework.messaging.rsocket.RSocketRequester;
 @Import(RSocketClientsRegistrar.class)
 class RSocketClientAutoConfiguration {
 
-    @Bean
-    @ConditionalOnBean (RSocketRequester.class)
-    RSocketClientBuilder rSocketClientBuilder(RSocketRequester rSocketRequester) {
-        return new RSocketClientBuilder(rSocketRequester);
-    }
+	@Bean
+	@ConditionalOnBean(RSocketRequester.class)
+	RSocketClientBuilder rSocketClientBuilder(RSocketRequester rSocketRequester) {
+		return new RSocketClientBuilder(rSocketRequester);
+	}
+
 }
