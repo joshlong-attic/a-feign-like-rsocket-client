@@ -1,4 +1,4 @@
-package rsocketclient;
+package com.joshlong.rsocket.client;
 
 import com.example.rsocketfeign.client.GreetingClient;
 import lombok.extern.log4j.Log4j2;

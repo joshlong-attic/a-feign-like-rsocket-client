@@ -1,6 +1,5 @@
-package rsocketclient;
+package com.joshlong.rsocket.client;
 
-import com.example.rsocketfeign.client.RsocketFeignApplication;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -21,7 +20,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.Assert;
 
 import java.util.Map;
-import java.util.Set;
 
 // this is where we would find and register beans based on interfaces.
 @Log4j2

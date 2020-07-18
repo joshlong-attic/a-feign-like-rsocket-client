@@ -1,4 +1,4 @@
-package rsocketclient;
+package com.joshlong.rsocket.client;
 
 import java.lang.annotation.*;
 
