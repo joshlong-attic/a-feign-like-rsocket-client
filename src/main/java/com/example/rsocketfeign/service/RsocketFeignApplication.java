@@ -4,7 +4,9 @@ import com.example.rsocketfeign.GreetingResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -24,6 +26,17 @@ public class RsocketFeignApplication {
 @Log4j2
 @Controller
 class GreetingsController {
+
+    @MessageMapping("greetings-mono-name.{name}.{age}")
+    Mono<String> greetMonoNameDestinationVariable(
+            @DestinationVariable("name") String name,
+            @DestinationVariable("age") int age,
+            @Payload Mono<String> payload
+    ) {
+        log.info("name=" + name);
+        log.info("age=" + age);
+        return payload;
+    }
 
     @MessageMapping("fire-and-forget")
     Mono<Void> fireAndForget(Mono<String> valueIn) {

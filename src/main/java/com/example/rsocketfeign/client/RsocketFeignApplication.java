@@ -1,42 +1,14 @@
 package com.example.rsocketfeign.client;
 
-import com.example.rsocketfeign.GreetingResponse;
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
-import org.springframework.messaging.handler.annotation.DestinationVariable;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import rsocketclient.RSocketClient;
-
-@RSocketClient
-interface GreetingClient {
-
-    @MessageMapping("greetings-with-channel")
-    Flux<GreetingResponse> greetParams(Flux<String> names);
-
-    @MessageMapping("greetings-stream")
-    Flux<GreetingResponse> greetStream(Mono<String> name);
-
-    @MessageMapping("greetings")
-    Mono<GreetingResponse> greet();
-
-    @MessageMapping("greetings-with-name")
-    Mono<GreetingResponse> greet(Mono<String> name);
-
-    @MessageMapping("fire-and-forget")
-    Mono<Void> greetFireAndForget(Mono<String> name);
-
-    // params
-    @MessageMapping("greetings-mono-name.{name}")
-    Mono<String> greetMonoNameDestinationVariable(@DestinationVariable("name") Mono<String> name);
-
-}
 
 @SpringBootApplication
 public class RsocketFeignApplication {
@@ -57,7 +29,6 @@ public class RsocketFeignApplication {
     @Bean
     ApplicationListener<ApplicationReadyEvent> client(GreetingClient greetingClient) {
         return are -> {
-
             greetingClient
                     .greetFireAndForget(Mono.just("Spring Fans"))
                     .subscribe();
@@ -73,8 +44,13 @@ public class RsocketFeignApplication {
             greetingClient
                     .greetStream(Mono.just("Spring fans over and over"))
                     .subscribe(System.out::println);
+
+            greetingClient
+                    .greetMonoNameDestinationVariable("jlong", 36, Mono.just("Josh"))
+                    .subscribe(System.out::println);
         };
     }
+
 
 }
 
