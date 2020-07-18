@@ -19,9 +19,9 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.util.Assert;
 
+import java.util.Collection;
 import java.util.Map;
 
-// this is where we would find and register beans based on interfaces.
 @Log4j2
 class RSocketClientsRegistrar
         implements ImportBeanDefinitionRegistrar, BeanFactoryAware, EnvironmentAware, ResourceLoaderAware {
@@ -30,13 +30,12 @@ class RSocketClientsRegistrar
     private Environment environment;
     private ResourceLoader resourceLoader;
 
-
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
                                         BeanDefinitionRegistry registry,
                                         BeanNameGenerator importBeanNameGenerator) {
-        var basePackages = AutoConfigurationPackages.get(this.beanFactory);
-        var scanner = this.buildScanner();
+        Collection<String> basePackages = AutoConfigurationPackages.get(this.beanFactory);
+        ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
         basePackages
                 .forEach(basePackage -> scanner
                         .findCandidateComponents(basePackage)
@@ -44,20 +43,22 @@ class RSocketClientsRegistrar
                         .filter(cc -> cc instanceof AnnotatedBeanDefinition)
                         .map(abd -> (AnnotatedBeanDefinition) abd)
                         .forEach(beanDefinition -> {
-                            var annotationMetadata = beanDefinition.getMetadata();
-                            Assert.isTrue(annotationMetadata.isInterface(), "@RSocketClient must be an interface");
-                            var attributes = annotationMetadata.getAnnotationAttributes(RSocketClient.class.getCanonicalName());
+                            AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
+                            Assert.isTrue(annotationMetadata.isInterface(), "the @" + RSocketClient.class.getName() +
+                                    " annotation must be used only on an interface");
+                            Map<String, Object> attributes = annotationMetadata.getAnnotationAttributes(RSocketClient.class.getCanonicalName());
                             this.registerRSocketClient(registry, beanDefinition, annotationMetadata, attributes);
                         }));
     }
 
     private ClassPathScanningCandidateComponentProvider buildScanner() {
-        var scanner = new ClassPathScanningCandidateComponentProvider(false, this.environment) {
-            @Override
-            protected boolean isCandidateComponent(AnnotatedBeanDefinition metadata) {
-                return metadata.getMetadata().isIndependent() && !metadata.getMetadata().isAnnotation();
-            }
-        };
+        ClassPathScanningCandidateComponentProvider scanner =
+                new ClassPathScanningCandidateComponentProvider(false, this.environment) {
+                    @Override
+                    protected boolean isCandidateComponent(AnnotatedBeanDefinition metadata) {
+                        return metadata.getMetadata().isIndependent() && !metadata.getMetadata().isAnnotation();
+                    }
+                };
         scanner.addIncludeFilter(new AnnotationTypeFilter(RSocketClient.class));
         scanner.setResourceLoader(this.resourceLoader);
         return scanner;
@@ -73,7 +74,9 @@ class RSocketClientsRegistrar
                                        AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
 
         String className = annotationMetadata.getClassName();
-        log.info("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
+        if (log.isDebugEnabled()) {
+            log.debug("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
+        }
 
         BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(RSocketClientFactoryBean.class);
         definition.addPropertyValue("type", className);
