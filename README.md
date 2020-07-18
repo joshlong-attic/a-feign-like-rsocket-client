@@ -1,6 +1,6 @@
 # A Feign-like RSocket Client 
 
-## Inpsiration 
+## Inspiration 
 
 It'd be nice to have easy Feign-like RSocket clients. This is a thing [@Mario5Gray](http://github.com/Mario5Gray) has talked about, and it seems like a great idea. So here it is. 
 
