@@ -1,4 +1,4 @@
-package com.joshlong.rsocket.client.service;
+package com.joshlong.rsocket.old.service;
 
 import com.joshlong.rsocket.client.GreetingResponse;
 import lombok.extern.log4j.Log4j2;

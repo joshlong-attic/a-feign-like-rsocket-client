@@ -1,7 +1,5 @@
-package com.joshlong.rsocket.client.client;
+package com.joshlong.rsocket.client;
 
-import com.joshlong.rsocket.client.GreetingResponse;
-import com.joshlong.rsocket.client.RSocketClient;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;

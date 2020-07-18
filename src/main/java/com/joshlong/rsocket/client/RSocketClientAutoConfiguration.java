@@ -12,7 +12,6 @@ import org.springframework.messaging.rsocket.RSocketRequester;
  */
 @Log4j2
 @Configuration
-@Import(RSocketClientsRegistrar.class)
 class RSocketClientAutoConfiguration {
 
 	@Bean

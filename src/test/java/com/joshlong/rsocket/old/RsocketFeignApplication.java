@@ -1,5 +1,6 @@
-package com.joshlong.rsocket.client.client;
+package com.joshlong.rsocket.old;
 
+import com.joshlong.rsocket.client.GreetingClient;
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
