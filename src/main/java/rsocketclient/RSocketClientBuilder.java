@@ -29,21 +29,20 @@ class RSocketClientBuilder {
             Class<?> returnType = methodInvocation.getMethod().getReturnType();
             Object[] arguments = methodInvocation.getArguments();
             Parameter[] parameters = methodInvocation.getMethod().getParameters();
-            log.info("invoking method " + methodName + '.');
-            log.info("return class: " + returnType.getName());
-            log.info("return Mono: " + Mono.class.isAssignableFrom(returnType));
-            log.info("return Flux: " + Flux.class.isAssignableFrom(returnType));
+            log.debug("invoking method " + methodName + '.');
+            log.debug("return class: " + returnType.getName());
+            log.debug("return Mono: " + Mono.class.isAssignableFrom(returnType));
+            log.debug("return Flux: " + Flux.class.isAssignableFrom(returnType));
 
             MessageMapping annotation = methodInvocation.getMethod().getAnnotation(MessageMapping.class);
             String route = annotation.value()[0];
             log.info("route: " + route);
 
+
             ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
             Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass(); // this is T for Mono<T> or Flux<T>
 
-            Object argument =
-                    arguments.length == 0 ? Mono.empty() : methodInvocation.getArguments()[0];
-
+            Object argument = arguments.length == 0 ? Mono.empty() : methodInvocation.getArguments()[0];
 
             if (Mono.class.isAssignableFrom(returnType)) {
                 // special case for fire-and-forget

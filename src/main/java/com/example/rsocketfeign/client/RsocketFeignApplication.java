@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import reactor.core.publisher.Flux;
@@ -30,6 +31,11 @@ interface GreetingClient {
 
     @MessageMapping("fire-and-forget")
     Mono<Void> greetFireAndForget(Mono<String> name);
+
+    // params
+    @MessageMapping("greetings-mono-name.{name}")
+    Mono<String> greetMonoNameDestinationVariable(@DestinationVariable("name") Mono<String> name);
+
 }
 
 @SpringBootApplication
@@ -66,7 +72,6 @@ public class RsocketFeignApplication {
 
             greetingClient
                     .greetStream(Mono.just("Spring fans over and over"))
-                    .take(5)
                     .subscribe(System.out::println);
         };
     }

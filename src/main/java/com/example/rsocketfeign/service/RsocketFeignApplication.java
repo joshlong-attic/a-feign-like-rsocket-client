@@ -43,7 +43,8 @@ class GreetingsController {
     Flux<GreetingResponse> greetFlux(Mono<String> name) {
         return name.flatMapMany(name1 -> Flux
                 .fromStream(Stream.generate(() -> new GreetingResponse("Hello " + name1 + "!")))
-                .delayElements(Duration.ofSeconds(1)));
+                .delayElements(Duration.ofSeconds(1)))
+                .take(5);
     }
 
     @MessageMapping("greetings-with-name")
