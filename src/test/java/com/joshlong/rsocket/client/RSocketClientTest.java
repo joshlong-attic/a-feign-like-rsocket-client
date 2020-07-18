@@ -23,51 +23,44 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RSocketClientTest {
 
-    static ConfigurableApplicationContext applicationContext;
+	static ConfigurableApplicationContext applicationContext;
 
-    static AtomicInteger port = new AtomicInteger(SocketUtils.findAvailableTcpPort());
+	static AtomicInteger port = new AtomicInteger(SocketUtils.findAvailableTcpPort());
 
-    @BeforeAll
-    public static void begin() throws Exception {
-        applicationContext = new SpringApplicationBuilder(RSocketServerConfiguration.class)
-                .web(WebApplicationType.NONE)
-                .run("--spring.profiles.active=service",
-                        "--spring.rsocket.server.port=" + port.get());
-    }
+	@BeforeAll
+	public static void begin() throws Exception {
+		applicationContext = new SpringApplicationBuilder(RSocketServerConfiguration.class).web(WebApplicationType.NONE)
+				.run("--spring.profiles.active=service", "--spring.rsocket.server.port=" + port.get());
+	}
 
-    @AfterAll
-    public static void destroy() {
-       applicationContext.stop();
-    }
+	@AfterAll
+	public static void destroy() {
+		applicationContext.stop();
+	}
 
-    @Test
-    public void noValueInMonoOut() throws Exception {
-        ConfigurableApplicationContext context = new SpringApplicationBuilder(RSocketClientConfiguration.class)
-                .web(WebApplicationType.NONE)
-                .run("--service.port=" + port.get(), "--spring.profiles.active=client");
-        GreetingClient greetingClient = context.getBean(GreetingClient.class);
-        Mono<GreetingResponse> greet = greetingClient.greet();
-        StepVerifier
-                .create( greet)
-                .expectNextMatches( gr -> gr.getMessage().equalsIgnoreCase("Hello, world!"))
-//                .expectNextCount(1)
-                .verifyComplete() ;
+	@Test
+	public void noValueInMonoOut() throws Exception {
+		ConfigurableApplicationContext context = new SpringApplicationBuilder(RSocketClientConfiguration.class)
+				.web(WebApplicationType.NONE).run("--service.port=" + port.get(), "--spring.profiles.active=client");
+		GreetingClient greetingClient = context.getBean(GreetingClient.class);
+		Mono<GreetingResponse> greet = greetingClient.greet();
+		StepVerifier.create(greet).expectNextMatches(gr -> gr.getMessage().equalsIgnoreCase("Hello, world!"))
+				.verifyComplete();
 
-    }
+	}
+
 }
-
 
 @Profile("client")
 @SpringBootApplication
 @EnableRSocketClients
 class RSocketClientConfiguration {
 
-    @Bean
-    RSocketRequester rSocketRequester(
-            @Value("${service.port}") int port,
-            RSocketRequester.Builder builder) {
-        return builder.connectTcp("localhost", port).block();
-    }
+	@Bean
+	RSocketRequester rSocketRequester(@Value("${service.port}") int port, RSocketRequester.Builder builder) {
+		return builder.connectTcp("localhost", port).block();
+	}
+
 }
 
 @Log4j2
@@ -76,14 +69,14 @@ class RSocketClientConfiguration {
 @EnableAutoConfiguration
 class RSocketServerConfiguration {
 
-    @Bean
-    GreetingsController greetingsController() {
-        return new GreetingsController();
-    }
+	@Bean
+	GreetingsController greetingsController() {
+		return new GreetingsController();
+	}
 
-    @PostConstruct
-    public void start() {
-        log.info("starting " + RSocketServerConfiguration.class.getName() + '.');
-    }
+	@PostConstruct
+	public void start() {
+		log.info("starting " + RSocketServerConfiguration.class.getName() + '.');
+	}
 
 }

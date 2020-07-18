@@ -18,47 +18,47 @@ import java.util.stream.Stream;
 @Controller
 class GreetingsController {
 
-    @PostConstruct
-    public void begin() {
-        log.info("begin()");
-    }
+	@PostConstruct
+	public void begin() {
+		log.info("begin()");
+	}
 
-    @MessageMapping("greetings-mono-name.{name}.{age}")
-    Mono<String> greetMonoNameDestinationVariable(@DestinationVariable("name") String name,
-                                                  @DestinationVariable("age") int age, @Payload Mono<String> payload) {
-        log.info("name=" + name);
-        log.info("age=" + age);
-        return payload;
-    }
+	@MessageMapping("greetings-mono-name.{name}.{age}")
+	Mono<String> greetMonoNameDestinationVariable(@DestinationVariable("name") String name,
+			@DestinationVariable("age") int age, @Payload Mono<String> payload) {
+		log.info("name=" + name);
+		log.info("age=" + age);
+		return payload;
+	}
 
-    @MessageMapping("fire-and-forget")
-    Mono<Void> fireAndForget(Mono<String> valueIn) {
-        return valueIn.doOnNext(value -> log.info("received fire-and-forget " + value + '.'))
-                .flatMap(x -> Mono.empty());
-    }
+	@MessageMapping("fire-and-forget")
+	Mono<Void> fireAndForget(Mono<String> valueIn) {
+		return valueIn.doOnNext(value -> log.info("received fire-and-forget " + value + '.'))
+				.flatMap(x -> Mono.empty());
+	}
 
-    @MessageMapping("greetings-with-channel")
-    Flux<GreetingResponse> greetParams(Flux<String> names) {
-        return names.map(String::toUpperCase).map(GreetingResponse::new);
-    }
+	@MessageMapping("greetings-with-channel")
+	Flux<GreetingResponse> greetParams(Flux<String> names) {
+		return names.map(String::toUpperCase).map(GreetingResponse::new);
+	}
 
-    @MessageMapping("greetings-stream")
-    Flux<GreetingResponse> greetFlux(Mono<String> name) {
-        return name.flatMapMany(
-                name1 -> Flux.fromStream(Stream.generate(() -> new GreetingResponse("Hello " + name1 + "!")))
-                        .delayElements(Duration.ofSeconds(1)))
-                .take(5);
-    }
+	@MessageMapping("greetings-stream")
+	Flux<GreetingResponse> greetFlux(Mono<String> name) {
+		return name.flatMapMany(
+				name1 -> Flux.fromStream(Stream.generate(() -> new GreetingResponse("Hello " + name1 + "!")))
+						.delayElements(Duration.ofSeconds(1)))
+				.take(5);
+	}
 
-    @MessageMapping("greetings-with-name")
-    Mono<GreetingResponse> greetMono(Mono<String> name) {
-        return name.map(GreetingResponse::new);
-    }
+	@MessageMapping("greetings-with-name")
+	Mono<GreetingResponse> greetMono(Mono<String> name) {
+		return name.map(GreetingResponse::new);
+	}
 
-    @MessageMapping("greetings")
-    Mono<GreetingResponse> greet() {
-        log.info ("invoking greetings and returning a GreetingsResponse.");
-        return Mono.just(new GreetingResponse("Hello, world!"));
-    }
+	@MessageMapping("greetings")
+	Mono<GreetingResponse> greet() {
+		log.info("invoking greetings and returning a GreetingsResponse.");
+		return Mono.just(new GreetingResponse("Hello, world!"));
+	}
 
 }
