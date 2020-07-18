@@ -1,9 +1,7 @@
-package com.example.rsocketfeign.service;
+package com.joshlong.rsocket.client.service;
 
-import com.example.rsocketfeign.GreetingResponse;
+import com.joshlong.rsocket.client.GreetingResponse;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -14,15 +12,6 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.stream.Stream;
 
-@SpringBootApplication
-public class RsocketFeignApplication {
-
-    public static void main(String[] args) {
-        System.setProperty("spring.profiles.active", "service");
-        SpringApplication.run(RsocketFeignApplication.class, args);
-    }
-}
-
 @Log4j2
 @Controller
 class GreetingsController {
@@ -31,8 +20,7 @@ class GreetingsController {
     Mono<String> greetMonoNameDestinationVariable(
             @DestinationVariable("name") String name,
             @DestinationVariable("age") int age,
-            @Payload Mono<String> payload
-    ) {
+            @Payload Mono<String> payload) {
         log.info("name=" + name);
         log.info("age=" + age);
         return payload;

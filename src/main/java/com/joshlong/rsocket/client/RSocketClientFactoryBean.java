@@ -6,8 +6,10 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.messaging.rsocket.RSocketRequester;
 
+/**
+ * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
+ */
 @Log4j2
 class RSocketClientFactoryBean implements ApplicationContextAware, FactoryBean<Object> {
 
@@ -21,8 +23,8 @@ class RSocketClientFactoryBean implements ApplicationContextAware, FactoryBean<O
 
     @Override
     public Object getObject() throws Exception {
-        RSocketRequester rSocketRequester = this.context.getBean(RSocketRequester.class);
-        return RSocketClientBuilder.buildClientFor(this.type, rSocketRequester);
+        RSocketClientBuilder clientBuilder = this.context.getBean(RSocketClientBuilder.class);
+        return clientBuilder.buildClientFor(this.type);
     }
 
     @Override

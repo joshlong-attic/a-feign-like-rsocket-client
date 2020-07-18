@@ -1,4 +1,4 @@
-package com.example.rsocketfeign;
+package com.joshlong.rsocket.client;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GreetingResponse {
-	private String mesage;
+	private String message;
 }

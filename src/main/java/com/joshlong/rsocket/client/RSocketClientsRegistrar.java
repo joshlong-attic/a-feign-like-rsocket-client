@@ -22,6 +22,9 @@ import org.springframework.util.Assert;
 import java.util.Collection;
 import java.util.Map;
 
+/**
+ * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
+ */
 @Log4j2
 class RSocketClientsRegistrar
         implements ImportBeanDefinitionRegistrar, BeanFactoryAware, EnvironmentAware, ResourceLoaderAware {
@@ -66,7 +69,6 @@ class RSocketClientsRegistrar
 
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
-        // what is this method for?
     }
 
     private void registerRSocketClient(BeanDefinitionRegistry registry,

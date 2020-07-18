@@ -1,6 +1,6 @@
-package com.example.rsocketfeign.client;
+package com.joshlong.rsocket.client.client;
 
-import com.example.rsocketfeign.GreetingResponse;
+import com.joshlong.rsocket.client.GreetingResponse;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;

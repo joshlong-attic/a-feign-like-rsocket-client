@@ -1,5 +1,6 @@
 package com.joshlong.rsocket.client;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactoryBean;
@@ -17,10 +18,17 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
+ */
 @Log4j2
+@RequiredArgsConstructor
 class RSocketClientBuilder {
 
-    static <T> T buildClientFor(Class<T> clazz, RSocketRequester rSocketRequester) {
+    private final RSocketRequester rSocketRequester;
+
+    public  <T> T buildClientFor(Class<T> clazz) {
         ProxyFactoryBean pfb = new ProxyFactoryBean();
         pfb.setTargetClass(clazz);
         pfb.addInterface(clazz);

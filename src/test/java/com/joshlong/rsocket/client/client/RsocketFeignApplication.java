@@ -1,4 +1,4 @@
-package com.example.rsocketfeign.client;
+package com.joshlong.rsocket.client.client;
 
 import lombok.SneakyThrows;
 import org.springframework.boot.SpringApplication;
