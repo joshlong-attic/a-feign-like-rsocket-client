@@ -7,7 +7,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinitionHolder;
 import org.springframework.beans.factory.config.BeanFactoryPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
@@ -97,66 +96,18 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 
 	@SneakyThrows
 	private void registerRSocketClient(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
-
 		String className = annotationMetadata.getClassName();
 		if (log.isDebugEnabled()) {
 			log.debug("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
 		}
-
-		////////////////////////////////////
-		// Assert.notNull(this.beanFactory, "the beanFactory is not null");
-		//
-		// String typeName = Qualifier.class.getTypeName();
-		// log.info(typeName);
-		//
-		// MergedAnnotations annotations = annotationMetadata.getAnnotations();
-		// boolean hasAQualifier =
-		// annotationMetadata.hasAnnotation(Qualifier.class.getTypeName());
-		// log.info(hasAQualifier);
-		//
-		// annotations.forEach(ma -> log.info(ma.toString()));
-		// //todo how do we find the RSocketRequester in the context? How do we find it by
-		// @Qualifier?
-
-		// String rSocketRequesterBeanName = "";
-
-		////////////////////////////////////
-
 		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(RSocketClientFactoryBean.class);
 		definition.addPropertyValue("type", className);
-
-		// if (StringUtils.hasText(rSocketRequesterBeanName)) {
-		// definition.addPropertyReference("requester", rSocketRequesterBeanName);
-		// }
-
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-
 		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
-
-		this.qualifyRSocketRequester(annotationMetadata, beanDefinition);
-
 		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
 		beanDefinition.setPrimary(true);
-
 		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[0]);
-
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
-	}
-
-	/**
-	 * so the important thing to figure out here is if the interface itself has been
-	 * annotated with a @Qualifier. If so, then we need to find the RSocketRequster that's
-	 * been annotated with that as well and use that one. Otherwise, use the single one
-	 * created int the app context. If none have been defined, throw an exception.
-	 */
-	private void qualifyRSocketRequester(AnnotationMetadata annotationMetadata, AbstractBeanDefinition beanDefinition) {
-		boolean hasAQualifier = annotationMetadata.hasMetaAnnotation(Qualifier.class.getTypeName())
-				|| annotationMetadata.hasAnnotation(Qualifier.class.getTypeName());
-		if (log.isDebugEnabled()) {
-			log.debug("qualified? " + hasAQualifier);
-		}
-		AutowireCandidateQualifier autowireCandidateQualifier = new AutowireCandidateQualifier("");
-		beanDefinition.addQualifier(autowireCandidateQualifier);
 	}
 
 	@Override
@@ -176,8 +127,8 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 
 	@Override
 	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-		log.info("postProcessBeanFactor");
-
+		// log.info("postProcessBeanFactory");
+		// why does this never get called?
 	}
 
 }
