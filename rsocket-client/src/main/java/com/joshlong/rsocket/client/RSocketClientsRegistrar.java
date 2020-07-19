@@ -1,5 +1,6 @@
 package com.joshlong.rsocket.client;
 
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
@@ -13,15 +14,17 @@ import org.springframework.context.EnvironmentAware;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
-import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
 
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
@@ -46,16 +49,30 @@ class RSocketClientsRegistrar
 				? AutoConfigurationPackages.get(this.beanFactory)
 				: Arrays.asList(standardAnnotationMetadata.getIntrospectedClass().getPackage().getName());
 		ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
-		basePackages.forEach(basePackage -> scanner.findCandidateComponents(basePackage).stream()
-				.filter(cc -> cc instanceof AnnotatedBeanDefinition).map(abd -> (AnnotatedBeanDefinition) abd)
+		basePackages.forEach(basePackage -> scanner.findCandidateComponents(basePackage)//
+				.stream()//
+				.filter(cc -> cc instanceof AnnotatedBeanDefinition)//
+				.map(abd -> (AnnotatedBeanDefinition) abd)//
 				.forEach(beanDefinition -> {
 					AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
-					Assert.isTrue(annotationMetadata.isInterface(),
-							"the @" + RSocketClient.class.getName() + " annotation must be used only on an interface");
-					Map<String, Object> attributes = annotationMetadata
-							.getAnnotationAttributes(RSocketClient.class.getCanonicalName());
-					this.registerRSocketClient(registry, beanDefinition, annotationMetadata, attributes);
+					this.validateInterface(annotationMetadata);
+					this.registerRSocketClient(registry, annotationMetadata);
 				}));
+	}
+
+	@SneakyThrows
+	private void validateInterface(AnnotationMetadata annotationMetadata) {
+		Assert.isTrue(annotationMetadata.isInterface(),
+				"the @" + RSocketClient.class.getName() + " annotation must be used only on an interface");
+		Class<?> clzz = Class.forName(annotationMetadata.getClassName());
+		ReflectionUtils.doWithMethods(clzz, method -> {
+			if (log.isDebugEnabled()) {
+				log.debug("validating " + clzz.getName() + "#" + method.getName());
+			}
+			MessageMapping annotation = method.getAnnotation(MessageMapping.class);
+			Assert.notNull(annotation, "you must use the @" + MessageMapping.class.getName()
+					+ " annotation on every method on " + clzz.getName() + '.');
+		});
 	}
 
 	private ClassPathScanningCandidateComponentProvider buildScanner() {
@@ -75,8 +92,7 @@ class RSocketClientsRegistrar
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 	}
 
-	private void registerRSocketClient(BeanDefinitionRegistry registry, AnnotatedBeanDefinition abstractBeanDefinition,
-			AnnotationMetadata annotationMetadata, Map<String, Object> attributes) {
+	private void registerRSocketClient(BeanDefinitionRegistry registry, AnnotationMetadata annotationMetadata) {
 
 		String className = annotationMetadata.getClassName();
 		if (log.isDebugEnabled()) {

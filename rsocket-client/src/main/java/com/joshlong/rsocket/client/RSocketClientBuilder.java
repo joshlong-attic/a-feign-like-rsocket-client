@@ -14,6 +14,7 @@ import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,13 +70,14 @@ class RSocketClientBuilder {
 		pfb.addInterface(clazz);
 		pfb.setAutodetectInterfaces(true);
 		pfb.addAdvice((MethodInterceptor) methodInvocation -> {
-			String methodName = methodInvocation.getMethod().getName();
-			Class<?> returnType = methodInvocation.getMethod().getReturnType();
+			Method method = methodInvocation.getMethod();
+			String methodName = method.getName();
+			Class<?> returnType = method.getReturnType();
 			Object[] arguments = methodInvocation.getArguments();
-			Parameter[] parameters = methodInvocation.getMethod().getParameters();
-			MessageMapping annotation = methodInvocation.getMethod().getAnnotation(MessageMapping.class);
+			Parameter[] parameters = method.getParameters();
+			MessageMapping annotation = method.getAnnotation(MessageMapping.class);
 			String route = annotation.value()[0];
-			ResolvableType resolvableType = ResolvableType.forMethodReturnType(methodInvocation.getMethod());
+			ResolvableType resolvableType = ResolvableType.forMethodReturnType(method);
 			Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass();
 			Object[] routeArguments = findDestinationVariables(arguments, parameters);
 			Object payloadArgument = findPayloadArgument(arguments, parameters);
@@ -97,7 +99,9 @@ class RSocketClientBuilder {
 					if (log.isDebugEnabled()) {
 						log.debug("request-response");
 					}
-					return rSocketRequester.route(route, routeArguments).data(payloadArgument)
+					return rSocketRequester//
+							.route(route, routeArguments)//
+							.data(payloadArgument)//
 							.retrieveMono(rawClassForReturnType);
 				}
 			}
@@ -106,7 +110,9 @@ class RSocketClientBuilder {
 				if (log.isDebugEnabled()) {
 					log.debug("request-stream or channel");
 				}
-				return rSocketRequester.route(route, routeArguments).data(payloadArgument)
+				return rSocketRequester//
+						.route(route, routeArguments)//
+						.data(payloadArgument)//
 						.retrieveFlux(rawClassForReturnType);
 			}
 			// is there something more sensible to return?

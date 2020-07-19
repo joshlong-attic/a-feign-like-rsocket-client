@@ -31,7 +31,7 @@ public class RSocketClientTest {
 	static AtomicInteger port = new AtomicInteger(SocketUtils.findAvailableTcpPort());
 
 	@BeforeAll
-	public static void begin() throws Exception {
+	public static void begin() {
 		serviceApplicationContext = new SpringApplicationBuilder(RSocketServerConfiguration.class)//
 				.web(WebApplicationType.NONE)
 				.run("--spring.profiles.active=service", "--spring.rsocket.server.port=" + port.get());
@@ -43,7 +43,7 @@ public class RSocketClientTest {
 	}
 
 	@Test
-	public void destinationVariablesAndPayload() throws Exception {
+	public void destinationVariablesAndPayload() {
 		GreetingClient greetingClient = buildClient();
 		Mono<String> greetingResponseFlux = greetingClient.greetMonoNameDestinationVariable("jlong", 36,
 				Mono.just("Hello"));
