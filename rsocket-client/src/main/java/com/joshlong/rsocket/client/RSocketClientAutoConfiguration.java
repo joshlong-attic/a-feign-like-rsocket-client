@@ -4,7 +4,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.messaging.rsocket.RSocketRequester;
 
 /**
@@ -16,8 +15,8 @@ class RSocketClientAutoConfiguration {
 
 	@Bean
 	@ConditionalOnBean(RSocketRequester.class)
-	RSocketClientBuilder rSocketClientBuilder(RSocketRequester rSocketRequester) {
-		return new RSocketClientBuilder(rSocketRequester);
+	RSocketClientBuilder rSocketClientBuilder() {
+		return new RSocketClientBuilder();
 	}
 
 }

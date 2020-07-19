@@ -1,5 +1,6 @@
-package com.joshlong.rsocket.client;
+package com.joshlong.rsocket.client.simple;
 
+import com.joshlong.rsocket.client.RSocketClient;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -7,7 +8,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RSocketClient
-public interface GreetingClient {
+interface GreetingClient {
 
 	@MessageMapping("greetings")
 	Mono<GreetingResponse> greet();

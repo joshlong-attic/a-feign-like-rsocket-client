@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 class RSocketClientBuilder {
 
-	private final RSocketRequester rSocketRequester;
+	// private final RSocketRequester rSocketRequester;
 
 	private static Object[] findDestinationVariables(Object[] arguments, Parameter[] parameters) {
 		List<Object> destinationVariableValues = new ArrayList<>();
@@ -64,7 +64,12 @@ class RSocketClientBuilder {
 		return payloadArgument;
 	}
 
-	public <T> T buildClientFor(Class<T> clazz) {
+	public <T> T buildClientFor(Class<T> clazz, RSocketRequester rSocketRequester) {
+
+		// Assert.notNull(rSocketRequester, "the requester must not be null"); // todo
+		// restore this
+		Assert.notNull(clazz, "the Class must not be null");
+
 		ProxyFactoryBean pfb = new ProxyFactoryBean();
 		pfb.setTargetClass(clazz);
 		pfb.addInterface(clazz);

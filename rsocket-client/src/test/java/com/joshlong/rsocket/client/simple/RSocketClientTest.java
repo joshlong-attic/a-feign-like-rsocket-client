@@ -1,5 +1,6 @@
-package com.joshlong.rsocket.client;
+package com.joshlong.rsocket.client.simple;
 
+import com.joshlong.rsocket.client.EnableRSocketClients;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -121,10 +122,10 @@ public class RSocketClientTest {
 
 }
 
-@Profile("client")
-@SpringBootApplication
 @Log4j2
+@Profile("client")
 @EnableRSocketClients
+@SpringBootApplication
 class RSocketClientConfiguration {
 
 	@PostConstruct
