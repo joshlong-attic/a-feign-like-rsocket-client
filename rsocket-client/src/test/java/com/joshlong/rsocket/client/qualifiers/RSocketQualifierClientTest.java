@@ -30,6 +30,20 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier(Constants.QUALIFIER_1)
+@interface PersonQualifier {
+
+}
+
+@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER })
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier(Constants.QUALIFIER_2)
+@interface GreetingQualifier {
+
+}
+
 /**
  * this tests that i can create discrete RSocketRequesters and target different services
  * from different clients. to test this i need to launch three things: people-service,
@@ -46,9 +60,9 @@ public class RSocketQualifierClientTest {
 	static ConfigurableApplicationContext serviceApplicationContext1;
 	static ConfigurableApplicationContext serviceApplicationContext2;
 
-	private static int port1 = SocketUtils.findAvailableTcpPort();
+	private static final int port1 = SocketUtils.findAvailableTcpPort();
 
-	private static int port2 = SocketUtils.findAvailableTcpPort();
+	private static final int port2 = SocketUtils.findAvailableTcpPort();
 
 	private static ConfigurableApplicationContext runServer(Class<?> clzz, String profileName, int port) {
 		return new SpringApplicationBuilder(clzz)//
@@ -109,20 +123,6 @@ class RSocketClientConfiguration {
 	RSocketRequester two(@Value("${" + Constants.QUALIFIER_2 + ".port}") int port, RSocketRequester.Builder builder) {
 		return builder.connectTcp("localhost", port).block();
 	}
-
-}
-
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-@Qualifier(Constants.QUALIFIER_1)
-@interface PersonQualifier {
-
-}
-
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.TYPE, ElementType.PARAMETER })
-@Retention(RetentionPolicy.RUNTIME)
-@Qualifier(Constants.QUALIFIER_2)
-@interface GreetingQualifier {
 
 }
 

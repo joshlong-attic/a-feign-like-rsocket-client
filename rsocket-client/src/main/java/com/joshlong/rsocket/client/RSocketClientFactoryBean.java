@@ -26,11 +26,6 @@ class RSocketClientFactoryBean implements BeanFactoryAware, FactoryBean<Object> 
 
 	private ListableBeanFactory context;
 
-	@SneakyThrows
-	public void setType(String type) {
-		this.type = Class.forName(type);
-	}
-
 	private static RSocketRequester forInterface(Class<?> clientInterface, ListableBeanFactory context) {
 		Map<String, RSocketRequester> rSocketRequestersInContext = context.getBeansOfType(RSocketRequester.class);
 		int rSocketRequestersCount = rSocketRequestersInContext.size();
@@ -62,6 +57,11 @@ class RSocketClientFactoryBean implements BeanFactoryAware, FactoryBean<Object> 
 		Assert.notNull(rSocketRequester, () -> "we could not find an " + RSocketRequester.class.getName()
 				+ " for the @RSocketClient interface " + clientInterface.getName() + '.');
 		return rSocketRequester;
+	}
+
+	@SneakyThrows
+	public void setType(String type) {
+		this.type = Class.forName(type);
 	}
 
 	@Override
