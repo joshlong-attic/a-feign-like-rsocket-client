@@ -44,13 +44,6 @@ import java.lang.annotation.Target;
 
 }
 
-/**
- * this tests that i can create discrete RSocketRequesters and target different services
- * from different clients. to test this i need to launch three things: people-service,
- * greetings-service, and a client. in the client, i need to have two RSocketRequesters
- * and two @RSocketClient instances.
- */
-
 @Log4j2
 public class RSocketQualifierClientTest {
 
@@ -102,7 +95,6 @@ public class RSocketQualifierClientTest {
 
 }
 
-@Log4j2
 @Profile("client")
 @EnableRSocketClients
 @SpringBootApplication
