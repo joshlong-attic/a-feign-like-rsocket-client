@@ -47,15 +47,13 @@ import java.lang.annotation.Target;
 @Log4j2
 public class RSocketQualifierClientTest {
 
-	static String SERVICE_1 = Constants.QUALIFIER_1;
-	static String SERVICE_2 = Constants.QUALIFIER_2;
-
-	static ConfigurableApplicationContext serviceApplicationContext1;
-	static ConfigurableApplicationContext serviceApplicationContext2;
-
 	private static final int port1 = SocketUtils.findAvailableTcpPort();
 
 	private static final int port2 = SocketUtils.findAvailableTcpPort();
+	static String SERVICE_1 = Constants.QUALIFIER_1;
+	static String SERVICE_2 = Constants.QUALIFIER_2;
+	static ConfigurableApplicationContext serviceApplicationContext1;
+	static ConfigurableApplicationContext serviceApplicationContext2;
 
 	private static ConfigurableApplicationContext runServer(Class<?> clzz, String profileName, int port) {
 		return new SpringApplicationBuilder(clzz)//

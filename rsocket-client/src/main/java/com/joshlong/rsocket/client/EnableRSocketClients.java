@@ -13,4 +13,10 @@ import java.lang.annotation.*;
 @Import(RSocketClientsRegistrar.class)
 public @interface EnableRSocketClients {
 
+	String[] value() default {};
+
+	String[] basePackages() default {};
+
+	Class<?>[] basePackageClasses() default {};
+
 }

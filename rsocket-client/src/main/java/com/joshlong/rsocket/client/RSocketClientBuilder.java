@@ -65,9 +65,7 @@ class RSocketClientBuilder {
 	}
 
 	public <T> T buildClientFor(Class<T> clazz, RSocketRequester rSocketRequester) {
-
-		// Assert.notNull(rSocketRequester, "the requester must not be null"); // todo
-		// restore this
+		Assert.notNull(rSocketRequester, "the requester must not be null");
 		Assert.notNull(clazz, "the Class must not be null");
 
 		ProxyFactoryBean pfb = new ProxyFactoryBean();

@@ -23,10 +23,11 @@ import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
+import org.springframework.util.StringUtils;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.*;
 
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
@@ -41,15 +42,42 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 
 	private ResourceLoader resourceLoader;
 
+	private Set<String> getBasePackages(AnnotationMetadata importingClassMetadata) {
+		Map<String, Object> attributes = importingClassMetadata
+				.getAnnotationAttributes(EnableRSocketClients.class.getCanonicalName());
+
+		Set<String> basePackages = new HashSet<>();
+		for (String pkg : (String[]) attributes.get("value")) {
+			if (StringUtils.hasText(pkg)) {
+				basePackages.add(pkg);
+			}
+		}
+		for (String pkg : (String[]) attributes.get("basePackages")) {
+			if (StringUtils.hasText(pkg)) {
+				basePackages.add(pkg);
+			}
+		}
+		for (Class<?> clazz : (Class[]) attributes.get("basePackageClasses")) {
+			basePackages.add(ClassUtils.getPackageName(clazz));
+		}
+
+		if (basePackages.isEmpty()) {
+			basePackages.add(ClassUtils.getPackageName(importingClassMetadata.getClassName()));
+		}
+		return basePackages;
+	}
+
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
 		Assert.isTrue(importingClassMetadata instanceof StandardAnnotationMetadata,
 				"we need a valid reference to " + StandardAnnotationMetadata.class.getName());
 		StandardAnnotationMetadata standardAnnotationMetadata = (StandardAnnotationMetadata) importingClassMetadata;
-		Collection<String> basePackages = AutoConfigurationPackages.has(this.beanFactory)
-				? AutoConfigurationPackages.get(this.beanFactory)
-				: Arrays.asList(standardAnnotationMetadata.getIntrospectedClass().getPackage().getName());
+		Collection<String> basePackages = getBasePackages(standardAnnotationMetadata);
+		if (log.isDebugEnabled()) {
+			log.debug("scanning the following packages: "
+					+ StringUtils.arrayToDelimitedString(basePackages.toArray(new String[0]), ", "));
+		}
 		ClassPathScanningCandidateComponentProvider scanner = this.buildScanner();
 		basePackages.forEach(basePackage -> scanner.findCandidateComponents(basePackage)//
 				.stream()//
@@ -60,6 +88,11 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 					this.validateInterface(annotationMetadata);
 					this.registerRSocketClient(annotationMetadata, registry);
 				}));
+	}
+
+	private List<String> getBasePackagesOld(StandardAnnotationMetadata standardAnnotationMetadata) {
+		return AutoConfigurationPackages.has(this.beanFactory) ? AutoConfigurationPackages.get(this.beanFactory)
+				: Collections.singletonList(standardAnnotationMetadata.getIntrospectedClass().getPackage().getName());
 	}
 
 	@SneakyThrows
@@ -100,12 +133,15 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 		if (log.isDebugEnabled()) {
 			log.debug("trying to turn the interface " + className + " into an RSocketClientFactoryBean");
 		}
+
 		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(RSocketClientFactoryBean.class);
 		definition.addPropertyValue("type", className);
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+
 		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
 		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
 		beanDefinition.setPrimary(true);
+
 		BeanDefinitionHolder holder = new BeanDefinitionHolder(beanDefinition, className, new String[0]);
 		BeanDefinitionReaderUtils.registerBeanDefinition(holder, registry);
 	}
