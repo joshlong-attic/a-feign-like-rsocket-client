@@ -10,8 +10,6 @@ import org.springframework.util.SocketUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.function.Consumer;
-
 @Log4j2
 public class RSocketClientTest {
 
@@ -22,7 +20,10 @@ public class RSocketClientTest {
 		ConfigurableApplicationContext client = runClient(servicePort);
 		RSocketRequester rSocketRequester = client.getBean(RSocketRequester.class);
 		GreetingClient gc = client.getBean(GreetingClient.class);
-		StepVerifier.create(gc.greet("123", Mono.just("A Name"))).expectNextCount(1).verifyComplete();
+		StepVerifier.create(gc.greet("123", Mono.just("A Name")))
+				.expectNextMatches(
+						map -> map.containsKey(Constants.CLIENT_ID_MIME_TYPE_VALUE) && map.containsValue("123"))
+				.verifyComplete();
 		client.stop();
 		service.stop();
 	}

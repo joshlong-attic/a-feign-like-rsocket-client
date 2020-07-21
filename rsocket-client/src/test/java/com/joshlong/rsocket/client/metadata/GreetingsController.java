@@ -8,6 +8,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.Map;
 
 @Log4j2
@@ -16,9 +17,10 @@ import java.util.Map;
 class GreetingsController {
 
 	@MessageMapping("greetings")
-	Mono<String> greet(@Headers Map<String, Object> headers, @Payload Mono<String> in) {
+	Mono<Map<String, Object>> greet(@Headers Map<String, Object> headers, @Payload Mono<String> in) {
 		headers.forEach((k, v) -> log.info(k + '=' + v));
-		return in.map(String::toUpperCase);
+		return Mono.just(
+				Collections.singletonMap(Constants.CLIENT_ID_MIME_TYPE_VALUE, headers.get(Constants.CLIENT_ID_HEADER)));
 	}
 
 }

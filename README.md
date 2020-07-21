@@ -59,6 +59,32 @@ public interface GreetingClient {
 
 If you invoke methods on this interface it'll in turn invoke endpoints using the configured `RSocketRequester` for you, turning destination variables into route variables and turning your payload into the data for the request.
 
+
+## Mapping Headers (RSocket metadata) to the RSocket request 
+
+You can map `@Header` elements to parameters in the method invocation. The header parameters get sent as composite RSocket metadata. Normal invocations of RSocket metadata would require two parts - a mime type and a value tht can be encoded. The encoding is a separate issue - Spring ships with a ton of encoders/decoders out of the box, but by default Spring Framework's built in support uses something called `CBOR`. There is still the question of how to communicate the mimetype. We expect the mime-type to be specified as the `value()` attribute for the `@Header` annotation. Thus:
+
+```java
+import com.joshlong.rsocket.client.RSocketClient;
+import org.springframework.messaging.handler.annotation.Header;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import reactor.core.publisher.Mono;
+
+@RSocketClient
+interface GreetingClient {
+
+	@MessageMapping("greetings")
+	Mono<String> greet(@Header( "messaging/x.bootiful.client-id") String clientId, @Payload Mono<String> name);
+
+}
+```
+
+This needs to line up with the expectations for composite metadata on the responder side of course. 
+
+
+
+
 ## Pairing `RSocketRequesters` to `@RSocketClient` interfaces 
 
 You can annotate your interfaces with a `@Qualifier` annotation (or a meta-annotated qualifier of your own making ) and then annotate an `RSocketRequester` and this module will use that `RSocketRequester` when servicing methods on a particular interface. 
@@ -112,3 +138,4 @@ class RSocketClientConfiguration {
 }
 
 ```
+

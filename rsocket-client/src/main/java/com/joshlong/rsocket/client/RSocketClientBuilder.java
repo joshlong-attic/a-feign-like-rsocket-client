@@ -149,8 +149,7 @@ class RSocketClientBuilder {
 	private RSocketRequester.RequestSpec enrichMetadata(RSocketRequester.RequestSpec route,
 			Map<MimeType, Object> compositeMetadata) {
 		if (!compositeMetadata.isEmpty()) {
-			Set<Map.Entry<MimeType, Object>> entries = compositeMetadata.entrySet();
-			for (Map.Entry<MimeType, Object> entry : entries) {
+			for (Map.Entry<MimeType, Object> entry : compositeMetadata.entrySet()) {
 				route = route.metadata(entry.getValue(), entry.getKey());
 			}
 		}
