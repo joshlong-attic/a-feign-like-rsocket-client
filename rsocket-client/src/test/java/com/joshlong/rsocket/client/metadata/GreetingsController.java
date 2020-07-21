@@ -19,8 +19,9 @@ class GreetingsController {
 	@MessageMapping("greetings")
 	Mono<Map<String, Object>> greet(@Headers Map<String, Object> headers, @Payload Mono<String> in) {
 		headers.forEach((k, v) -> log.info(k + '=' + v));
-		return Mono.just(
-				Collections.singletonMap(Constants.CLIENT_ID_MIME_TYPE_VALUE, headers.get(Constants.CLIENT_ID_HEADER)));
+		Map<String, Object> data = Collections.singletonMap(Constants.CLIENT_ID_MIME_TYPE_VALUE,
+				headers.get(Constants.CLIENT_ID_HEADER));
+		return Mono.just(data);
 	}
 
 }
