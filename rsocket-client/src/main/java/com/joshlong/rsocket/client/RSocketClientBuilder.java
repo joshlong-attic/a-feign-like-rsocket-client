@@ -41,7 +41,7 @@ class RSocketClientBuilder {
 	}
 
 	private static Object findPayloadArgument(Object[] arguments, Parameter[] parameters) {
-		Object payloadArgument = null;
+		Object payloadArgument = Mono.empty();
 		if (arguments.length == 0) {
 			payloadArgument = Mono.empty();
 		}
