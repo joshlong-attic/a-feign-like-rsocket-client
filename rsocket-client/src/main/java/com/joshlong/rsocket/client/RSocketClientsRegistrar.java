@@ -70,10 +70,7 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 	@Override
 	public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
 			BeanNameGenerator importBeanNameGenerator) {
-		Assert.isTrue(importingClassMetadata instanceof StandardAnnotationMetadata,
-				"we need a valid reference to " + StandardAnnotationMetadata.class.getName());
-		StandardAnnotationMetadata standardAnnotationMetadata = (StandardAnnotationMetadata) importingClassMetadata;
-		Collection<String> basePackages = getBasePackages(standardAnnotationMetadata);
+		Collection<String> basePackages = getBasePackages(importingClassMetadata);
 		if (log.isDebugEnabled()) {
 			log.debug("scanning the following packages: "
 					+ StringUtils.arrayToDelimitedString(basePackages.toArray(new String[0]), ", "));
@@ -88,11 +85,6 @@ class RSocketClientsRegistrar implements BeanFactoryPostProcessor, ImportBeanDef
 					this.validateInterface(annotationMetadata);
 					this.registerRSocketClient(annotationMetadata, registry);
 				}));
-	}
-
-	private List<String> getBasePackagesOld(StandardAnnotationMetadata standardAnnotationMetadata) {
-		return AutoConfigurationPackages.has(this.beanFactory) ? AutoConfigurationPackages.get(this.beanFactory)
-				: Collections.singletonList(standardAnnotationMetadata.getIntrospectedClass().getPackage().getName());
 	}
 
 	@SneakyThrows

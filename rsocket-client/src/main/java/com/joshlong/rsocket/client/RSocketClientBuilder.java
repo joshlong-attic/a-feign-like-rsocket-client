@@ -6,18 +6,20 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.core.ResolvableType;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
+import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.rsocket.RSocketRequester;
 import org.springframework.util.Assert;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author <a href="mailto:josh@joshlong.com">Josh Long</a>
@@ -25,8 +27,6 @@ import java.util.List;
 @Log4j2
 @RequiredArgsConstructor
 class RSocketClientBuilder {
-
-	// private final RSocketRequester rSocketRequester;
 
 	private static Object[] findDestinationVariables(Object[] arguments, Parameter[] parameters) {
 		List<Object> destinationVariableValues = new ArrayList<>();
@@ -64,10 +64,29 @@ class RSocketClientBuilder {
 		return payloadArgument;
 	}
 
+	private static Map<MimeType, Object> findCompositeMetadata(Object[] arguments, Parameter[] parameters) {
+		Map<MimeType, Object> metadata = new HashMap<>();
+		Assert.isTrue(parameters.length == arguments.length,
+				"there should be an equal number of " + Parameter.class.getName() + " and objects");
+		for (int i = 0; i < parameters.length; i++) {
+			Parameter annotations = parameters[i];
+			Object argument = arguments[i];
+			Header[] headers = annotations.getAnnotationsByType(Header.class);
+			if (headers.length > 0) {
+				Header header = headers[0];
+				Assert.state(StringUtils.hasText(header.value()) || StringUtils.hasText(header.name()),
+						() -> "you can not use the @" + Header.class.getName()
+								+ " annotation unless you provide a mimetype");
+				MimeType mimeType = MimeTypeUtils.parseMimeType(header.value());
+				metadata.put(mimeType, argument);
+			}
+		}
+		return metadata;
+	}
+
 	public <T> T buildClientFor(Class<T> clazz, RSocketRequester rSocketRequester) {
 		Assert.notNull(rSocketRequester, "the requester must not be null");
 		Assert.notNull(clazz, "the Class must not be null");
-
 		ProxyFactoryBean pfb = new ProxyFactoryBean();
 		pfb.setTargetClass(clazz);
 		pfb.addInterface(clazz);
@@ -84,26 +103,30 @@ class RSocketClientBuilder {
 			Class<?> rawClassForReturnType = resolvableType.getGenerics()[0].getRawClass();
 			Object[] routeArguments = findDestinationVariables(arguments, parameters);
 			Object payloadArgument = findPayloadArgument(arguments, parameters);
+			Map<MimeType, Object> compositeMetadata = findCompositeMetadata(arguments, parameters);
+
 			if (log.isDebugEnabled()) {
 				log.debug("invoking " + methodName + " accepting " + arguments.length + " argument(s) for route "
 						+ route + " with destination variables ("
 						+ StringUtils.arrayToDelimitedString(routeArguments, ", ") + ")" + '.' + " The payload is "
 						+ payloadArgument);
 			}
+
 			if (Mono.class.isAssignableFrom(returnType)) {
 				// special case for fire-and-forget
 				if (Void.class.isAssignableFrom(rawClassForReturnType)) {
 					if (log.isDebugEnabled()) {
 						log.debug("fire-and-forget");
 					}
-					return rSocketRequester.route(route, routeArguments).data(payloadArgument).send();
+					return enrichMetadata(rSocketRequester.route(route, routeArguments), compositeMetadata)
+							.data(payloadArgument)//
+							.send();
 				}
 				else {
 					if (log.isDebugEnabled()) {
 						log.debug("request-response");
 					}
-					return rSocketRequester//
-							.route(route, routeArguments)//
+					return enrichMetadata(rSocketRequester.route(route, routeArguments), compositeMetadata)//
 							.data(payloadArgument)//
 							.retrieveMono(rawClassForReturnType);
 				}
@@ -113,16 +136,26 @@ class RSocketClientBuilder {
 				if (log.isDebugEnabled()) {
 					log.debug("request-stream or channel");
 				}
-				return rSocketRequester//
-						.route(route, routeArguments)//
-						.data(payloadArgument)//
-						.retrieveFlux(rawClassForReturnType);
+				return enrichMetadata(rSocketRequester.route(route, routeArguments), compositeMetadata)
+						.data(payloadArgument).retrieveFlux(rawClassForReturnType);
 			}
 			// is there something more sensible to return?
 			return Mono.empty();
 		});
 
 		return (T) pfb.getObject();
+	}
+
+	private RSocketRequester.RequestSpec enrichMetadata(RSocketRequester.RequestSpec route,
+			Map<MimeType, Object> compositeMetadata) {
+		if (!compositeMetadata.isEmpty()) {
+			Set<Map.Entry<MimeType, Object>> entries = compositeMetadata.entrySet();
+			for (Map.Entry<MimeType, Object> entry : entries) {
+				route = route.metadata(entry.getValue(), entry.getKey());
+			}
+		}
+
+		return route;
 	}
 
 }
